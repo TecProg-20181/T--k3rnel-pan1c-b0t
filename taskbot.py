@@ -9,6 +9,8 @@ import db
 
 from datetime import datetime
 from db import Task
+from github_api import GithubIssuesApi
+
 
 TOKEN_FILE = "token.txt"
 
@@ -119,12 +121,14 @@ def handle_status(ids_array, chat, status):
             try:
                 task = query.one()
             except sqlalchemy.orm.exc.NoResultFound:
-                message += "\U00002757 _404_ Task {} not found x.x\n".format(task_id)
+                message += "\U00002757 _404_ Task {} not found x.x\n".format(
+                    task_id)
                 continue
             task.status = status
             db.session.commit()
-            message += "*{}* task [[{}]] {}\n".format(status, task.id, task.name)
-    
+            message += "*{}* task [[{}]] {}\n".format(
+                status, task.id, task.name)
+
     return message
 
 
@@ -154,6 +158,22 @@ def handle_updates(updates):
             db.session.commit()
             send_message(
                 "New task *TODO* [[{}]] {}".format(task.id, task.name), chat)
+
+            query = db.session.query(
+                Task).filter_by(id=task.id, chat=chat)
+            try:
+                taskObj = query.one()
+            except sqlalchemy.orm.exc.NoResultFound:
+                send_message(
+                    "_404_ Task {} not found x.x".format(task_id), chat)
+                return
+
+            github = GithubIssuesApi()
+            issue_url = github.post_issue(taskObj)
+            send_message(
+                "Issue *{}* created on github repository!".format(issue_url), chat)
+
+            return
 
         elif command == '/rename':
             text = ''
@@ -236,9 +256,10 @@ def handle_updates(updates):
             print(len(ids_array))
 
             if ids_array[0] == '':
-                send_message("\U00002757 You *must inform* at least one id", chat)
+                send_message(
+                    "\U00002757 You *must inform* at least one id", chat)
                 return
-            
+
             message = handle_status(ids_array, chat, 'TODO')
             send_message(message, chat)
 
@@ -246,9 +267,10 @@ def handle_updates(updates):
             ids_array = msg.split(' ')
 
             if ids_array[0] == '':
-                send_message("\U00002757 You *must inform* at least one id", chat)
+                send_message(
+                    "\U00002757 You *must inform* at least one id", chat)
                 return
-            
+
             message = handle_status(ids_array, chat, 'DOING')
             send_message(message, chat)
 
@@ -256,9 +278,10 @@ def handle_updates(updates):
             ids_array = msg.split(' ')
 
             if ids_array[0] == '':
-                send_message("\U00002757 You *must inform* at least one id", chat)
+                send_message(
+                    "\U00002757 You *must inform* at least one id", chat)
                 return
-            
+
             message = handle_status(ids_array, chat, 'DONE')
             send_message(message, chat)
 
@@ -280,13 +303,12 @@ def handle_updates(updates):
                     priority_icon = '\U00002622'
                 if task.priority == 'high':
                     priority_icon = '\U0001F534'
-                
+
                 duedate_info = ''
                 if task.duedate:
                     duedate = task.duedate.strftime('%d/%m/%Y')
                     icon = '\U0001F4C6'
                     duedate_info = '{} {}'.format(icon, duedate)
-                    
 
                 a += '[[{}]] {} {} {} {}\n'.format(task.id,
                                                    status_icon,
@@ -495,7 +517,8 @@ def handle_updates(updates):
                         send_message(
                             "The duedate *must follow* the 'dd/mm/yyyy' pattern", chat)
                     else:
-                        task.duedate = datetime.strptime(text, '%d/%m/%Y').date()
+                        task.duedate = datetime.strptime(
+                            text, '%d/%m/%Y').date()
                         print(task.duedate)
                         send_message(
                             "*Task {}* duedate set to *{}*".format(task_id, text), chat)
