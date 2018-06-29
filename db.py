@@ -11,6 +11,7 @@ session = Session()
 
 Base = declarative_base()
 
+
 class Task(Base):
     __tablename__ = 'tasks'
 
@@ -22,11 +23,13 @@ class Task(Base):
     parents = Column(String)
     priority = Column(String)
     duedate = Column(Date)
+    github_id = Column(String)
 
     def __repr__(self):
         return "<Task(id={}, chat={}, name='{}', status='{}')>".format(
             self.id, self.chat, self.name, self.status
         )
+
 
 Base.metadata.create_all(engine)
 
