@@ -1,5 +1,8 @@
 import json
 import requests
+import db
+
+from db import Task
 
 GITHUB_TOKEN_FILE = "github.txt"
 GITHUB_OWNER = "TecProg-20181"
@@ -28,7 +31,6 @@ class GithubIssuesApi():
         return json.loads(r.text)
 
     def post_issue(self, task):
-        print(task.name)
         body = {
             "title": task.name,
             "body": task.name,
@@ -39,16 +41,11 @@ class GithubIssuesApi():
             ]
         }
 
-        r = requests.post(self.url, headers=self.headers, data=body)
-        issue = json.loads(r.text)
-
-        print(issue)
-        return issue.url
+        r = requests.post(self.url,
+                          headers=self.headers,
+                          data=json.dumps(body))
+        return json.loads(r.text)
 
 
 if __name__ == '__main__':
-    # github = GithubIssuesApi()
-    # issues = github.get_issues()
-
-    # print(json)
     pass

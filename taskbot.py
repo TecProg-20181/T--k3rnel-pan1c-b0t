@@ -26,7 +26,7 @@ HELP = """
  /duplicate ID
  /priority ID PRIORITY {low, medium, high}
  /priorities
- /duedate DATE {dd/mm/yyyy}
+ /duedate ID DATE {dd/mm/yyyy}
  /help
 """
 
@@ -153,7 +153,7 @@ def handle_updates(updates):
 
         if command == '/new':
             task = Task(chat=chat, name=msg, status='TODO',
-                        dependencies='', parents='', priority='')
+                        dependencies='', parents='', priority='', github_id='')
             db.session.add(task)
             db.session.commit()
             send_message(
@@ -169,9 +169,12 @@ def handle_updates(updates):
                 return
 
             github = GithubIssuesApi()
-            issue_url = github.post_issue(taskObj)
+            issue = github.post_issue(taskObj)
             send_message(
-                "Issue *{}* created on github repository!".format(issue_url), chat)
+                "Issue [#{}]({}) created on github repository!".format(issue['number'], issue['html_url']), chat)
+
+            taskObj.github_id = issue['id']
+            db.session.commit()
 
             return
 
