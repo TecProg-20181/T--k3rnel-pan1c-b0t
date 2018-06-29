@@ -108,6 +108,26 @@ def validate_date_format(date_string):
         return False
 
 
+def handle_status(ids_array, chat, status):
+    message = ''
+    for id in ids_array:
+        if not id.isdigit():
+            return "\U00002757 You *must inform* numeric value(s) only"
+        else:
+            task_id = int(id)
+            query = db.session.query(Task).filter_by(id=task_id, chat=chat)
+            try:
+                task = query.one()
+            except sqlalchemy.orm.exc.NoResultFound:
+                message += "\U00002757 _404_ Task {} not found x.x\n".format(task_id)
+                continue
+            task.status = status
+            db.session.commit()
+            message += "*{}* task [[{}]] {}\n".format(status, task.id, task.name)
+    
+    return message
+
+
 def handle_updates(updates):
     for update in updates["result"]:
         if 'message' in update:
@@ -164,6 +184,7 @@ def handle_updates(updates):
                 db.session.commit()
                 send_message("Task {} redefined from {} to {}".format(
                     task_id, old_text, text), chat)
+
         elif command == '/duplicate':
             if not msg.isdigit():
                 send_message("You must inform the task id", chat)
@@ -211,55 +232,35 @@ def handle_updates(updates):
                 send_message("Task [[{}]] deleted".format(task_id), chat)
 
         elif command == '/todo':
-            if not msg.isdigit():
-                send_message("You must inform the task id", chat)
-            else:
-                task_id = int(msg)
-                query = db.session.query(Task).filter_by(id=task_id, chat=chat)
-                try:
-                    task = query.one()
-                except sqlalchemy.orm.exc.NoResultFound:
-                    send_message(
-                        "_404_ Task {} not found x.x".format(task_id), chat)
-                    return
-                task.status = 'TODO'
-                db.session.commit()
-                send_message(
-                    "*TODO* task [[{}]] {}".format(task.id, task.name), chat)
+            ids_array = msg.split(' ')
+            print(len(ids_array))
+
+            if ids_array[0] == '':
+                send_message("\U00002757 You *must inform* at least one id", chat)
+                return
+            
+            message = handle_status(ids_array, chat, 'TODO')
+            send_message(message, chat)
 
         elif command == '/doing':
-            if not msg.isdigit():
-                send_message("You must inform the task id", chat)
-            else:
-                task_id = int(msg)
-                query = db.session.query(Task).filter_by(id=task_id, chat=chat)
-                try:
-                    task = query.one()
-                except sqlalchemy.orm.exc.NoResultFound:
-                    send_message(
-                        "_404_ Task {} not found x.x".format(task_id), chat)
-                    return
-                task.status = 'DOING'
-                db.session.commit()
-                send_message(
-                    "*DOING* task [[{}]] {}".format(task.id, task.name), chat)
+            ids_array = msg.split(' ')
+
+            if ids_array[0] == '':
+                send_message("\U00002757 You *must inform* at least one id", chat)
+                return
+            
+            message = handle_status(ids_array, chat, 'DOING')
+            send_message(message, chat)
 
         elif command == '/done':
-            if not msg.isdigit():
-                send_message("You must inform the task id", chat)
-            else:
-                task_id = int(msg)
-                query = db.session.query(Task).filter_by(id=task_id, chat=chat)
-                try:
-                    task = query.one()
-                except sqlalchemy.orm.exc.NoResultFound:
-                    send_message(
-                        "_404_ Task {} not found x.x".format(task_id), chat)
-                    return
-                task.status = 'DONE'
-                db.session.commit()
-                send_message(
-                    "*DONE* task [[{}]] {}".format(task.id, task.name), chat)
+            ids_array = msg.split(' ')
+
+            if ids_array[0] == '':
+                send_message("\U00002757 You *must inform* at least one id", chat)
+                return
+            
+            message = handle_status(ids_array, chat, 'DONE')
+            send_message(message, chat)
 
         elif command == '/list':
             a = ''
