@@ -1,5 +1,6 @@
 db.sqlite3
 token.txt
+github.txt
 
 ### Python ###
 # Byte-compiled / optimized / DLL files
