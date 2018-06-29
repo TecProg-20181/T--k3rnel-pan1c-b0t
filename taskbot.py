@@ -4,10 +4,10 @@ import json
 import requests
 import time
 import urllib
-
 import sqlalchemy
-
 import db
+
+from datetime import datetime
 from db import Task
 
 TOKEN_FILE = "token.txt"
@@ -24,6 +24,7 @@ HELP = """
  /duplicate ID
  /priority ID PRIORITY {low, medium, high}
  /priorities
+ /duedate DATE {dd/mm/yyyy}
  /help
 """
 
@@ -97,6 +98,14 @@ def deps_text(task, chat, preceed=''):
         text += line
 
     return text
+
+
+def validate_date_format(date_string):
+    try:
+        datetime.strptime(date_string, '%d/%m/%Y')
+        return True
+    except ValueError:
+        return False
 
 
 def handle_updates(updates):
@@ -448,6 +457,40 @@ def handle_updates(updates):
                 a += '[[{}]] {}\n'.format(task.id, task.name)
 
             send_message(a, chat)
+
+        elif command == '/duedate':
+            text = ''
+            if msg != '':
+                if len(msg.split(' ', 1)) > 1:
+                    text = msg.split(' ', 1)[1]
+                msg = msg.split(' ', 1)[0]
+
+            if not msg.isdigit():
+                send_message("You must inform the task id", chat)
+            else:
+                task_id = int(msg)
+                query = db.session.query(Task).filter_by(id=task_id, chat=chat)
+                try:
+                    task = query.one()
+                except sqlalchemy.orm.exc.NoResultFound:
+                    send_message(
+                        "_404_ Task {} not found x.x".format(task_id), chat)
+                    return
+
+                if text == '':
+                    task.duedate = None
+                    send_message(
+                        "_Cleared_ duedate from task {}".format(task_id), chat)
+                else:
+                    if not validate_date_format(text):
+                        send_message(
+                            "The duedate *must follow* the 'dd/mm/yyyy' pattern", chat)
+                    else:
+                        task.duedate = datetime.strptime(text, '%d/%m/%Y').date()
+                        print(task.duedate)
+                        send_message(
+                            "*Task {}* duedate set to *{}*".format(task_id, text), chat)
+                db.session.commit()
 
         elif command == '/start':
             send_message("Welcome! Here is a list of things you can do.", chat)
