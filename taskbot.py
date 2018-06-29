@@ -279,11 +279,19 @@ def handle_updates(updates):
                     priority_icon = '\U00002622'
                 if task.priority == 'high':
                     priority_icon = '\U0001F534'
+                
+                duedate_info = ''
+                if task.duedate:
+                    duedate = task.duedate.strftime('%d/%m/%Y')
+                    icon = '\U0001F4C6'
+                    duedate_info = '{} {}'.format(icon, duedate)
+                    
 
-                a += '[[{}]] {} {} {}\n'.format(task.id,
-                                                status_icon,
-                                                priority_icon,
-                                                task.name)
+                a += '[[{}]] {} {} {} {}\n'.format(task.id,
+                                                   status_icon,
+                                                   priority_icon,
+                                                   task.name,
+                                                   duedate_info)
                 a += deps_text(task, chat)
 
             send_message(a, chat)
