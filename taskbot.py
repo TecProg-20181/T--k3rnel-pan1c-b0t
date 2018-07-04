@@ -423,21 +423,39 @@ def handle_updates(updates):
             a = ''
 
             a += '\U0001F4CC _Priorities_\n'
+
             query = db.session.query(Task).filter_by(
                 priority='low', chat=chat).order_by(Task.id)
             a += '\n\U0001F535 *LOW*\n'
             for task in query.all():
-                a += '[[{}]] {}\n'.format(task.id, task.name)
+                status_icon = '\U0001F195'
+                if task.status == 'DOING':
+                    status_icon = '\U000023FA'
+                if task.status == 'DONE':
+                    status_icon = '\U00002611'
+                a += '[[{}]] {} {}\n'.format(task.id, status_icon, task.name)
+
             query = db.session.query(Task).filter_by(
                 priority='medium', chat=chat).order_by(Task.id)
             a += '\n\U00002622 *MEDIUM*\n'
             for task in query.all():
-                a += '[[{}]] {}\n'.format(task.id, task.name)
+                status_icon = '\U0001F195'
+                if task.status == 'DOING':
+                    status_icon = '\U000023FA'
+                if task.status == 'DONE':
+                    status_icon = '\U00002611'
+                a += '[[{}]] {} {}\n'.format(task.id, status_icon, task.name)
+
             query = db.session.query(Task).filter_by(
                 priority='high', chat=chat).order_by(Task.id)
             a += '\n\U0001F534 *HIGH*\n'
             for task in query.all():
-                a += '[[{}]] {}\n'.format(task.id, task.name)
+                status_icon = '\U0001F195'
+                if task.status == 'DOING':
+                    status_icon = '\U000023FA'
+                if task.status == 'DONE':
+                    status_icon = '\U00002611'
+                a += '[[{}]] {} {}\n'.format(task.id, status_icon, task.name)
 
             send_message(a, chat)
 
