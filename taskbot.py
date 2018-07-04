@@ -165,7 +165,7 @@ def handle_updates(updates):
                 taskObj = query.one()
             except sqlalchemy.orm.exc.NoResultFound:
                 send_message(
-                    "_404_ Task {} not found x.x".format(task_id), chat)
+                    "_404_ Task {} not found x.x".format(taskObj.id), chat)
                 return
 
             github = GithubIssuesApi()
@@ -256,7 +256,6 @@ def handle_updates(updates):
 
         elif command == '/todo':
             ids_array = msg.split(' ')
-            print(len(ids_array))
 
             if ids_array[0] == '':
                 send_message(
@@ -291,7 +290,7 @@ def handle_updates(updates):
         elif command == '/list':
             a = ''
 
-            a += '\U0001F4CB Task List\n'
+            a += '\U0001F4CB Task List\n\n'
             query = db.session.query(Task).filter_by(
                 parents='', chat=chat).order_by(Task.id)
             for task in query.all():
@@ -419,19 +418,23 @@ def handle_updates(updates):
                                 Task).filter_by(id=depid, chat=chat)
                             try:
                                 taskdep = query.one()
-                                taskdep.parents += str(task.id) + ','
+                                parents_list = taskdep.dependencies.split(',')
+                                if str(task.id) not in parents_list:
+                                    taskdep.parents += str(task.id) + ','
+                                    deplist = task.dependencies.split(',')
+                                    if str(depid) not in deplist:
+                                        task.dependencies += str(depid) + ','
+
+                                    db.session.commit()
+                                    send_message(
+                                        "Task {} dependencies up to date".format(task_id), chat)
+                                else:
+                                    send_message(
+                                        "\U00002757 Dependencies *can not be circular*!", chat)
                             except sqlalchemy.orm.exc.NoResultFound:
                                 send_message(
                                     "_404_ Task {} not found x.x".format(depid), chat)
                                 continue
-
-                            deplist = task.dependencies.split(',')
-                            if str(depid) not in deplist:
-                                task.dependencies += str(depid) + ','
-
-                db.session.commit()
-                send_message(
-                    "Task {} dependencies up to date".format(task_id), chat)
 
         elif command == '/priority':
             text = ''
