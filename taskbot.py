@@ -85,17 +85,31 @@ def deps_text(task, chat, preceed=''):
             id=int(task.dependencies.split(',')[:-1][i]), chat=chat)
         dep = query.one()
 
-        icon = '\U0001F195'
+        status_icon = '\U0001F195'
         if dep.status == 'DOING':
-            icon = '\U000023FA'
+            status_icon = '\U000023FA'
         elif dep.status == 'DONE':
-            icon = '\U00002611'
+            status_icon = '\U00002611'
+
+        priority_icon = '\U0001F535'
+        if dep.priority == 'medium':
+            priority_icon = '\U00002622'
+        if dep.priority == 'high':
+            priority_icon = '\U0001F534'
+
+        duedate_info = ''
+        if dep.duedate:
+            duedate = dep.duedate.strftime('%d/%m/%Y')
+            icon = '\U0001F4C6'
+            duedate_info = '{} {}'.format(icon, duedate)
 
         if i + 1 == len(task.dependencies.split(',')[:-1]):
-            line += '└── [[{}]] {} {}\n'.format(dep.id, icon, dep.name)
+            line += '└── [[{}]] {} {} {} {}\n'.format(
+                dep.id, status_icon, priority_icon, dep.name, duedate_info)
             line += deps_text(dep, chat, preceed + '    ')
         else:
-            line += '├── [[{}]] {} {}\n'.format(dep.id, icon, dep.name)
+            line += '├── [[{}]] {} {} {} {}\n'.format(
+                dep.id, status_icon, priority_icon, dep.name, duedate_info)
             line += deps_text(dep, chat, preceed + '│   ')
 
         text += line
