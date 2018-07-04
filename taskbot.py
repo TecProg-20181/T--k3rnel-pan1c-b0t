@@ -27,6 +27,7 @@ HELP = """
  /priority ID PRIORITY {low, medium, high}
  /priorities
  /duedate ID DATE {dd/mm/yyyy}
+ /status
  /help
 """
 
@@ -321,62 +322,6 @@ def handle_updates(updates):
 
             send_message(a, chat)
 
-            a = ''
-
-            a += '\U0001F4DD _Status_\n'
-            query = db.session.query(Task).filter_by(
-                status='TODO', chat=chat).order_by(Task.id)
-            a += '\n\U0001F195 *TODO*\n'
-            for task in query.all():
-                priority_icon = '\U0001F535'
-                if task.priority == 'medium':
-                    priority_icon = '\U00002622'
-                if task.priority == 'high':
-                    priority_icon = '\U0001F534'
-                a += '[[{}]] {} {}\n'.format(task.id, priority_icon, task.name)
-            query = db.session.query(Task).filter_by(
-                status='DOING', chat=chat).order_by(Task.id)
-            a += '\n\U000023FA *DOING*\n'
-            for task in query.all():
-                priority_icon = '\U0001F535'
-                if task.priority == 'medium':
-                    priority_icon = '\U00002622'
-                if task.priority == 'high':
-                    priority_icon = '\U0001F534'
-                a += '[[{}]] {} {}\n'.format(task.id, priority_icon, task.name)
-            query = db.session.query(Task).filter_by(
-                status='DONE', chat=chat).order_by(Task.id)
-            a += '\n\U00002611 *DONE*\n'
-            for task in query.all():
-                priority_icon = '\U0001F535'
-                if task.priority == 'medium':
-                    priority_icon = '\U00002622'
-                if task.priority == 'high':
-                    priority_icon = '\U0001F534'
-                a += '[[{}]] {} {}\n'.format(task.id, priority_icon, task.name)
-
-            send_message(a, chat)
-
-            a = ''
-            a += '\U0001F4CC _Priorities_\n'
-            query = db.session.query(Task).filter_by(
-                priority='low', chat=chat).order_by(Task.id)
-            a += '\n\U0001F535 *LOW*\n'
-            for task in query.all():
-                a += '[[{}]] {}\n'.format(task.id, task.name)
-            query = db.session.query(Task).filter_by(
-                priority='medium', chat=chat).order_by(Task.id)
-            a += '\n\U00002622 *MEDIUM*\n'
-            for task in query.all():
-                a += '[[{}]] {}\n'.format(task.id, task.name)
-            query = db.session.query(Task).filter_by(
-                priority='high', chat=chat).order_by(Task.id)
-            a += '\n\U0001F534 *HIGH*\n'
-            for task in query.all():
-                a += '[[{}]] {}\n'.format(task.id, task.name)
-
-            send_message(a, chat)
-
         elif command == '/dependson':
             text = ''
             if msg != '':
@@ -476,6 +421,7 @@ def handle_updates(updates):
 
         elif command == '/priorities':
             a = ''
+
             a += '\U0001F4CC _Priorities_\n'
             query = db.session.query(Task).filter_by(
                 priority='low', chat=chat).order_by(Task.id)
@@ -529,6 +475,43 @@ def handle_updates(updates):
                         send_message(
                             "*Task {}* duedate set to *{}*".format(task_id, text), chat)
                 db.session.commit()
+
+        elif command == '/status':
+            a = ''
+
+            a += '\U0001F4DD _Status_\n'
+            query = db.session.query(Task).filter_by(
+                status='TODO', chat=chat).order_by(Task.id)
+            a += '\n\U0001F195 *TODO*\n'
+            for task in query.all():
+                priority_icon = '\U0001F535'
+                if task.priority == 'medium':
+                    priority_icon = '\U00002622'
+                if task.priority == 'high':
+                    priority_icon = '\U0001F534'
+                a += '[[{}]] {} {}\n'.format(task.id, priority_icon, task.name)
+            query = db.session.query(Task).filter_by(
+                status='DOING', chat=chat).order_by(Task.id)
+            a += '\n\U000023FA *DOING*\n'
+            for task in query.all():
+                priority_icon = '\U0001F535'
+                if task.priority == 'medium':
+                    priority_icon = '\U00002622'
+                if task.priority == 'high':
+                    priority_icon = '\U0001F534'
+                a += '[[{}]] {} {}\n'.format(task.id, priority_icon, task.name)
+            query = db.session.query(Task).filter_by(
+                status='DONE', chat=chat).order_by(Task.id)
+            a += '\n\U00002611 *DONE*\n'
+            for task in query.all():
+                priority_icon = '\U0001F535'
+                if task.priority == 'medium':
+                    priority_icon = '\U00002622'
+                if task.priority == 'high':
+                    priority_icon = '\U0001F534'
+                a += '[[{}]] {} {}\n'.format(task.id, priority_icon, task.name)
+
+            send_message(a, chat)
 
         elif command == '/start':
             send_message("Welcome! Here is a list of things you can do.", chat)
